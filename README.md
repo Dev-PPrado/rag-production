@@ -1,106 +1,194 @@
-# Agentic RAG com Qdrant & LangGraph (Produção)
+# Agentic RAG com Qdrant e LangGraph
 
-Este módulo representa o projeto final da nossa trilha de *Retrieval-Augmented Generation* (RAG). Aqui, elevamos o sistema RAG tradicional para uma arquitetura **Agentic RAG**, pronta para produção, que une a força de bancos de dados vetoriais locais ([Qdrant](https://qdrant.tech/documentation/)), frameworks de agentes ([LangGraph](https://langchain-ai.github.io/langgraph/) e [LangChain](https://python.langchain.com/)), e uma API moderna ([FastAPI](https://fastapi.tiangolo.com/)).
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pedro-hsprado-dataengineer)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Dev-PPrado)
+[![Portfólio](https://img.shields.io/badge/Portf%C3%B3lio-4B5563?style=for-the-badge&logo=googlechrome&logoColor=white)](https://dev-pprado.github.io/)
 
-## 🎯 Objetivo Arquitetural
+API de *Retrieval-Augmented Generation* (RAG) com arquitetura agêntica, construída com [FastAPI](https://fastapi.tiangolo.com/), [LangGraph](https://langchain-ai.github.io/langgraph/), [Qdrant](https://qdrant.tech/documentation/) e [Langfuse](https://langfuse.com/docs). O sistema permite ingerir documentos PDF e TXT em coleções vetoriais e consultá-los por meio de um agente que decide, a cada mensagem, se precisa ou não buscar contexto na base de conhecimento.
 
-No RAG Tradicional, o fluxo é fixo: o usuário pergunta, o sistema sempre busca no banco de dados vetorial, anexa o contexto e envia ao LLM.
+## Sobre o projeto
 
-**No nosso projeto (Agentic RAG):** 
-Nós utilizamos o **[LangGraph](https://langchain-ai.github.io/langgraph/)** para criar um Agente (LLM) que toma decisões. Através de *Tools* (ferramentas), o modelo decide proativamente:
-1. **Devo responder diretamente?** (Para bate-papo, saudações "Olá, bom dia").
-2. **Devo invocar a ferramenta de busca?** (Para perguntas técnicas ou sobre o acervo documental).
+Este é um **projeto de aprendizado**, desenvolvido como parte dos estudos da **trilha de Engenharia de IA da Jornada de Dados**. Ele corresponde ao projeto final do módulo de RAG da trilha e tem como objetivo aplicar, em um único sistema, os conceitos estudados ao longo do curso:
 
-Isso resulta em um sistema mais inteligente, que não gasta tokens e tempo fazendo buscas desnecessárias, mas realiza *queries* cirúrgicas na base vetorial quando precisada de contexto.
+- ingestão e *chunking* de documentos;
+- geração de *embeddings* e armazenamento em banco vetorial;
+- orquestração de agentes com *tool calling*;
+- exposição do sistema via API REST;
+- observabilidade de aplicações com LLMs.
 
-## 🛠️ Stack Tecnológica e Ferramentas
+Por se tratar de um projeto de estudo, o foco está na clareza da arquitetura e na experimentação com as ferramentas, e não em requisitos completos de produção (autenticação, testes automatizados, *deploy*, entre outros).
 
-O ecossistema que construímos envolve as seguintes tecnologias:
+## Arquitetura
 
-*   **[FastAPI](https://fastapi.tiangolo.com/)**: Servidor web assíncrono hiper-rápido, provendo os endpoints da nossa aplicação Restful.
-*   **[Qdrant](https://qdrant.tech/documentation/)**: Nosso Banco de Dados Vetorial *Open Source*. Estamos rodando o [Qdrant](https://qdrant.tech/documentation/) via [Docker](https://docs.docker.com/) localmente (porta 6333) para persistir nossos embeddings de alta dimensão.
-*   **[LangChain](https://python.langchain.com/) & [LangGraph](https://langchain-ai.github.io/langgraph/)**: Orquestração do agente. O `LangGraph` gerencia o Estado da nossa conversa (StateGraph) e o ciclo dinâmico contínuo entre invocações diretas ao LLM e o *ToolNode* (nossa ferramenta de busca).
-*   **[OpenAI Embeddings](https://platform.openai.com/docs/guides/embeddings) (text-embedding-3-large)**: Criação de vetores para mapeamento semântico dos textos.
-*   **[OpenAI LLM](https://platform.openai.com/docs/models) (gpt-4o-mini)**: O "Cérebro" do Agente, encarregado de interpretar requests e executar chamadas da ferramenta de retrieve.
-*   **[Langfuse](https://langfuse.com/docs)**: Plataforma de Observabilidade e Monitoramento de LLMs. Usado através de callbacks para traçar e analisar cada token gerado e tempo de inferência nas requisições.
+Em um RAG tradicional, o fluxo é fixo: toda pergunta dispara uma busca no banco vetorial, o contexto recuperado é anexado ao prompt e o resultado é enviado ao LLM.
 
-## 🗂️ Estrutura do Projeto
+Neste projeto, o fluxo é controlado por um agente implementado com um `StateGraph` do LangGraph. O LLM recebe a ferramenta `retrieve_documents` e decide quando utilizá-la:
+
+- **Resposta direta**: saudações e conversas que não dependem da base documental são respondidas sem consulta ao banco vetorial.
+- **Recuperação de contexto**: perguntas sobre o acervo acionam a ferramenta, que busca os trechos mais relevantes no Qdrant e os devolve ao agente para compor a resposta, com citação da fonte (`[Fonte: nome_arquivo, pagina]`).
+
+Essa abordagem reduz chamadas desnecessárias ao banco vetorial e consumo de tokens, mantendo buscas direcionadas quando o contexto é necessário.
 
 ```text
-09-rag-production/
-├── index.html                  # Interface Web Frontend simples para testes (Chat + Upload).
-├── main.py                     # Entrypoint do Uvicorn que sobe a aplicação FastAPI.
-├── src/
-│   ├── api.py                  # Definição do FastAPI, CORS e inclusão de Routers.
-│   ├── models.py               # Contratos de dados (Pydantic Models) para as Requisições/Respostas.
-│   ├── settings.py             # Gerenciamento de Variáveis de Ambiente e chaves de API.
-│   ├── pdf_utils.py            # Utilitários de extração de texto em memória (PyMuPDF - fitz).
-│   ├── customlogger.py         # Configuração de Logs padronizado para console.
-│   ├── chat/
-│   │   ├── chat.py             # Core do Agentic RAG: Graph State, Agente LLM, e a Tool de Retrieve.
-│   │   ├── llm_models.py       # Instanciação centralizada das LLMs e Embeddings conectados ao Langfuse.
-│   │   └── qdrant.py           # Conexão AsyncGlobal com o serviço Qdrant.
-│   ├── embedder/
-│   │   ├── client.py           # Operações de Banco (Criar collection, Upsert Vetores).
-│   │   └── processor.py        # Processamento Inteligente: Chunking Dinâmico, Extração Meta-Info + LLM.
-│   └── routers/
-│       ├── chat.py             # Endpoint /chat/ask -> Conecta o cliente Frontend ao agente.
-│       ├── embedder.py         # Endpoints de Upload, Processamento e Coleções.
-│       └── qdrant.py           # (Antigo/Legado) Rotas adicionais de administração CRUD do Qdrant.
+            +---------+
+ START ---> |  agent  | ---(sem tool call)---> END
+            +---------+
+                 |  ^
+      (tool call)|  |
+                 v  |
+            +---------+
+            |  tools  |  retrieve_documents -> Qdrant
+            +---------+
 ```
 
-## ⚙️ Novidades e Funcionalidades Core
+## Stack tecnológica
 
-### 1. Ingestão Dinâmica de Documentos
-Foi criado um motor flexível no `processor.py` para ingestão:
-*   Os administradores podem através de Endpoints subir PDFs diretamente para *Collections* específicas.
-*   Pode ser decidido em tempo-de-requisição se usaremos divisores Recursivos (`RecursiveCharacterTextSplitter`) ou por blocos fechados.
-*   Tamanho de Chunks, Overlap e tokenizadores locais (`tiktoken`) são parametrizados via API dinamicamente.
+| Componente | Tecnologia | Função |
+|---|---|---|
+| API | [FastAPI](https://fastapi.tiangolo.com/) + Uvicorn | Endpoints REST assíncronos |
+| Orquestração | [LangGraph](https://langchain-ai.github.io/langgraph/) / [LangChain](https://python.langchain.com/) | Grafo de estado do agente e *tool calling* |
+| Banco vetorial | [Qdrant](https://qdrant.tech/documentation/) (Docker) | Armazenamento e busca de *embeddings* |
+| LLM | OpenAI `gpt-4.1-mini` | Agente de conversação e extração de metadados |
+| Embeddings | OpenAI `text-embedding-3-large` (3072 dimensões) | Representação semântica dos trechos |
+| Observabilidade | [Langfuse](https://langfuse.com/docs) | Rastreamento de chamadas, tokens e latência |
+| Leitura de documentos | PyPDF2 / PyMuPDF | Extração de texto de PDFs |
+| Gerenciamento de dependências | [uv](https://docs.astral.sh/uv/) | Ambiente virtual e instalação de pacotes |
 
-### 2. Auto-Extração de Metadados via LLM
-Ao enviar um documento para o vetor, o sistema lê automaticamente a primeira página e solicita dinamicamente a outro LLM (via `with_structured_output`) que emita:
-*   `classificacao`: Qual o tipo do arquivo em 3 palavras.
-*   `descricao`: Resumo funcional em 2 frases.
-* Isso entra como metadados enriquecidos no banco, facilitando filtros e aumentando contexto de leitura futura.
+## Funcionalidades
 
-### 3. Agente com Tool Calling e Multi-Collections
-O chat mudou radicalmente nesta versão. Usamos a magia do `StateGraph` do [LangGraph](https://langchain-ai.github.io/langgraph/).
-*   O estado gerencia a lista de mensagens (`messages`) e também o arquivo contextual (`file_context`).
-*   O Endpoints aceita no payload `collection_name`, passando dinamicamente essa variável na configuração de Runtime do [LangGraph](https://langchain-ai.github.io/langgraph/) para a ferramenta `retrieve_documents`. Assim o usuário pesquisa na base que quiser sem reescrever código.
-*   **O Agente pensa:** Se a requisição requerer, o agente ativa a *tool*, varre o banco, junta o resultado retornado pela Tool, formata com citações ("Fonte: arquivo X, pág Y") e molda a resposta final.
+### Ingestão de documentos
 
-### 4. Observabilidade Real ([Langfuse](https://langfuse.com/docs))
-As chamadas da Rota `/chat/ask` instanciam um `CallbackHandler()` do [Langfuse](https://langfuse.com/docs) especificamente e dinamicamente para aquela requisição, rotulando com Tags o nome da coleção acessada.
+- Upload de um ou mais arquivos PDF ou TXT para uma coleção específica.
+- Estratégia de *chunking* configurável por requisição: divisor recursivo (`RecursiveCharacterTextSplitter`) ou por caractere (`CharacterTextSplitter`).
+- Tamanho de *chunk*, *overlap* e contagem por tokens (`tiktoken`) parametrizáveis.
+- Documentos já existentes na coleção são ignorados, evitando duplicidade; também é possível substituir ou remover um documento.
 
+### Extração automática de metadados
 
-## 🚀 Como Executar Localmente
+Durante a ingestão, a primeira página do documento é enviada ao LLM com saída estruturada (`with_structured_output`), que gera:
+
+- `classificacao`: tipo do documento em até três palavras;
+- `descricao`: resumo do documento em até duas frases.
+
+Esses campos são armazenados como metadados de cada vetor, junto com nome do arquivo e número da página.
+
+### Chat com múltiplas coleções
+
+- O endpoint de chat recebe o nome da coleção, que é repassado à ferramenta de busca via configuração de *runtime* do LangGraph. Assim, a mesma aplicação consulta diferentes bases sem alteração de código.
+- Suporte a histórico de conversa enviado pelo cliente.
+- Possibilidade de anexar um arquivo à pergunta, usado como contexto adicional e cruzado com o conteúdo recuperado da base.
+
+### Observabilidade
+
+Cada requisição ao chat cria um `CallbackHandler` do Langfuse, permitindo acompanhar a execução do grafo, as chamadas à ferramenta, o consumo de tokens e o tempo de resposta.
+
+## Estrutura do projeto
+
+```text
+rag-production/
+├── index.html               # Interface web para testes (gestão de coleções, upload e chat)
+├── main.py                  # Ponto de entrada da aplicação
+├── pyproject.toml           # Dependências do projeto
+├── .env.example             # Modelo de variáveis de ambiente
+└── src/
+    ├── api.py               # Instância do FastAPI, CORS e registro dos routers
+    ├── models.py            # Modelos Pydantic de requisição, resposta e metadados
+    ├── settings.py          # Configurações e variáveis de ambiente
+    ├── pdf_utils.py         # Extração de texto de PDFs em memória (PyMuPDF)
+    ├── customlogger.py      # Configuração padronizada de logs
+    ├── chat/
+    │   ├── chat.py          # Grafo do agente, ferramenta de busca e serviço de chat
+    │   ├── llm_models.py    # Instâncias de LLMs e embeddings
+    │   └── qdrant.py        # Cliente assíncrono do Qdrant
+    ├── embedder/
+    │   ├── client.py        # Operações no Qdrant (coleções, upsert, remoção)
+    │   └── processor.py     # Extração de texto, chunking, metadados e embeddings
+    └── routers/
+        ├── chat.py          # Endpoint de chat
+        └── qdrant.py        # Endpoints de gestão de coleções e documentos
+```
+
+## Endpoints
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/health` | Verificação de disponibilidade da API |
+| `POST` | `/qdrant/collection?collection_name={nome}` | Cria uma coleção |
+| `DELETE` | `/qdrant/collection/{collection_name}` | Remove uma coleção |
+| `POST` | `/qdrant/collection/{collection_name}/document` | Ingere um ou mais documentos |
+| `PUT` | `/qdrant/collection/{collection_name}/document/{filename}` | Substitui um documento existente |
+| `DELETE` | `/qdrant/collection/{collection_name}/document/{filename}` | Remove um documento |
+| `POST` | `/chat/ask` | Envia uma pergunta ao agente |
+
+Parâmetros de ingestão (form-data): `files`, `chunk_size` (padrão `1000`), `overlap_chunk` (padrão `100`), `splitter_type` (`recursive` ou `character`) e `use_tiktoken` (padrão `false`).
+
+Parâmetros do chat (form-data): `query`, `collection_name`, `history` (JSON com mensagens `role`/`content`), `file` (opcional) e `clear_history`.
+
+A documentação interativa completa fica disponível em `http://localhost:8000/docs` com a aplicação em execução.
+
+## Como executar
 
 ### Pré-requisitos
-1.  **[Docker](https://docs.docker.com/)**: Necessário para rodar o [Qdrant](https://qdrant.tech/documentation/) local.
-2.  **[uv](https://docs.astral.sh/uv/)** (ou pip): Gerenciador de dependências python moderno.
-3.  **Ambiente configurado**: Crie um arquivo `.env` na raiz da pasta `09-rag-production` baseado nas chaves pedidas. (OpenAI API e [Langfuse](https://langfuse.com/docs))
 
-### Passos:
+- Python 3.13 ou superior
+- [uv](https://docs.astral.sh/uv/)
+- [Docker](https://docs.docker.com/)
+- Chave de API da OpenAI
+- Projeto no Langfuse (opcional, para observabilidade)
 
-1.  **Subir o Qdrant pelo Docker:**
-    ```bash
-    docker run -p 6333:6333 -p 6334:6334 -v qdrant_data:/qdrant/storage:z qdrant/qdrant
-    ```
+### 1. Configurar as variáveis de ambiente
 
-2.  **Instalar e ativar ambiente virtual (se usando UV):**
-    ```bash
-    uv venv
-    uv pip sync requirements.txt
-    uv pip install pymupdf  # Garantir compatibilidade do processador PDF
-    ```
+Copie o arquivo de exemplo e preencha as chaves:
 
-3.  **Rodar a aplicação [FastAPI](https://fastapi.tiangolo.com/):**
-    ```bash
-    uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    ```
+```bash
+cp .env.example .env
+```
 
-4.  **Testar via UI Própria!**
-    *   Vá no explorador de arquivos, ache o `index.html` deixado na raiz da pasta `09-rag-production`.
-    *   Dê um duplo-clique para abrir no Google Chrome / Edge.
-    *   No painel esquerdo: Crie uma coleção "base_estudo" e envie seus PDFs ou TXTs.
-    *   No painel direito: Troque o campo "Coleção" para "base_estudo" e interaja com o agente em tempo real!
+| Variável | Descrição |
+|---|---|
+| `OPENAI_API_KEY` | Chave de API da OpenAI |
+| `QDRANT_HOST` | Host do Qdrant (padrão `localhost`) |
+| `QDRANT_PORT` | Porta do Qdrant (padrão `6333`) |
+| `LANGFUSE_PUBLIC_KEY` | Chave pública do Langfuse |
+| `LANGFUSE_SECRET_KEY` | Chave secreta do Langfuse |
+| `LANGFUSE_BASE_URL` | URL do Langfuse (padrão `https://cloud.langfuse.com`) |
+
+### 2. Iniciar o Qdrant
+
+```bash
+docker run -d -p 6333:6333 -p 6334:6334 -v qdrant_data:/qdrant/storage qdrant/qdrant
+```
+
+O painel do Qdrant fica disponível em `http://localhost:6333/dashboard`.
+
+### 3. Instalar as dependências
+
+```bash
+uv sync
+```
+
+### 4. Iniciar a API
+
+```bash
+uv run uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### 5. Testar pela interface web
+
+Abra o arquivo `index.html` no navegador. A interface se conecta à API em `http://localhost:8000`.
+
+1. No painel esquerdo, crie uma coleção (por exemplo, `base_estudo`) e envie arquivos PDF ou TXT.
+2. No painel direito, informe a mesma coleção e converse com o agente.
+
+## Possíveis evoluções
+
+- Respostas em *streaming* no endpoint de chat (o serviço já possui o método `astream_resposta`).
+- Busca híbrida (densa e esparsa) e filtros por metadados.
+- Persistência do histórico de conversas no servidor.
+- Testes automatizados e avaliação da qualidade das respostas.
+- Containerização da API e orquestração com Docker Compose.
+- Autenticação e restrição de CORS.
+
+## Créditos
+
+Projeto desenvolvido por Pedro Prado como parte da trilha de Engenharia de IA da Jornada de Dados.
