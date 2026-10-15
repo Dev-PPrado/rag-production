@@ -316,7 +316,7 @@
             statusDiv.className = 'status-msg';
 
             const formData = new FormData();
-            formData.append("file", fileInput);
+            formData.append("files", fileInput);
             formData.append("chunk_size", chunkSize);
             formData.append("overlap_chunk", overlap);
             formData.append("splitter_type", splitter);
@@ -332,11 +332,22 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    statusDiv.className = 'status-msg success';
-                    statusDiv.innerHTML = `Vetorizado! ${data.vector_count} chunks processados.`;
+                    // O endpoint retorna um resultado por arquivo em data.results
+                    const result = (data.results || [])[0] || {};
+                    if (result.status === 'success') {
+                        statusDiv.className = 'status-msg success';
+                        statusDiv.textContent = `Vetorizado! ${result.vector_count} chunks processados.`;
+                    } else {
+                        statusDiv.className = 'status-msg error';
+                        statusDiv.textContent = result.message || 'Erro na ingestão.';
+                    }
                 } else {
+                    // Erros de validacao (422) trazem detail como lista
+                    const detail = Array.isArray(data.detail)
+                        ? data.detail.map(d => d.msg).join('; ')
+                        : data.detail;
                     statusDiv.className = 'status-msg error';
-                    statusDiv.innerHTML = data.detail || 'Erro na ingestão.';
+                    statusDiv.textContent = detail || 'Erro na ingestão.';
                 }
             } catch (err) {
                 statusDiv.className = 'status-msg error';
