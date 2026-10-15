@@ -323,6 +323,46 @@
             border-bottom-left-radius: 4px;
         }
 
+        .loading-message {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            animation: typing-bounce 1.2s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes typing-bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+
+            30% {
+                transform: translateY(-4px);
+                opacity: 1;
+            }
+        }
+
         .chat-input-area {
             display: flex;
             gap: 10px;
@@ -585,6 +625,22 @@
             historyObj.scrollTop = historyObj.scrollHeight;
         }
 
+        // Indicador de carregamento enquanto o agente busca e gera a resposta
+        function showLoading() {
+            const historyObj = document.getElementById('chatHistory');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message bot-message loading-message';
+            loadingDiv.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+
+            const label = document.createElement('span');
+            label.textContent = 'Buscando informações nos documentos...';
+            loadingDiv.appendChild(label);
+
+            historyObj.appendChild(loadingDiv);
+            historyObj.scrollTop = historyObj.scrollHeight;
+            return loadingDiv;
+        }
+
         // --- Chat Requisicao ---
         async function sendMessage(e) {
             e.preventDefault();
@@ -599,6 +655,7 @@
             appendMessage(query, true);
             inputField.value = '';
             btn.disabled = true;
+            const loadingDiv = showLoading();
 
             const formData = new FormData();
             formData.append("query", query);
@@ -616,6 +673,7 @@
 
                 if (res.ok) {
                     const data = await res.json();
+                    loadingDiv.remove();
                     appendMessage(data.response, false);
 
                     // Adiciona no history basico
@@ -623,11 +681,14 @@
                     chatContext.push({ "role": "assistant", "content": data.response });
                 } else {
                     const errInfo = await res.json();
+                    loadingDiv.remove();
                     appendMessage(`[Erro do servidor: ${errInfo.detail || res.status}]`, false);
                 }
             } catch (err) {
+                loadingDiv.remove();
                 appendMessage(`[Falha ao conectar com ${API_BASE}]`, false);
             } finally {
+                loadingDiv.remove();
                 btn.disabled = false;
                 inputField.focus();
             }
