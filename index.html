@@ -9,11 +9,20 @@
         :root {
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
-            --bg-color: #f8fafc;
+            --primary-soft: #eff6ff;
+            --bg-color: #f1f5f9;
             --panel-bg: #ffffff;
+            --surface: #f8fafc;
             --text-main: #0f172a;
             --text-muted: #64748b;
             --border: #e2e8f0;
+            --border-strong: #cbd5e1;
+            --radius: 10px;
+            --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 12px rgb(15 23 42 / 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -21,78 +30,205 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             margin: 0;
-            padding: 20px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+        }
+
+        /* --- Cabecalho --- */
+        .app-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px;
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .app-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .app-header h1 {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .app-header p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* --- Layout --- */
+        .app-main {
+            flex: 1;
             display: flex;
             gap: 20px;
-            height: 100vh;
-            box-sizing: border-box;
+            padding: 20px 24px;
+            min-height: 0;
         }
 
         .panel {
             background: var(--panel-bg);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
         .config-panel {
-            flex: 1;
-            min-width: 300px;
-            max-width: 400px;
+            flex: 0 0 360px;
             overflow-y: auto;
         }
 
         .chat-panel {
-            flex: 2;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .panel-section {
+            padding: 20px 22px;
+        }
+
+        .panel-section + .panel-section {
+            border-top: 1px solid var(--border);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--border);
         }
 
         h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.25rem;
+            margin: 0 0 4px;
+            font-size: 0.95rem;
+            font-weight: 600;
             color: var(--text-main);
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 10px;
         }
 
+        .section-desc {
+            margin: 0 0 16px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .panel-header h2 {
+            margin: 0;
+        }
+
+        /* --- Formularios --- */
         .form-group {
-            margin-bottom: 16px;
+            margin-bottom: 14px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .form-row > * {
+            flex: 1;
         }
 
         label {
             display: block;
             margin-bottom: 6px;
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             font-weight: 500;
-            color: var(--text-main);
+            color: #334155;
         }
 
         input[type="text"],
         input[type="number"],
-        select,
+        select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: 7px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            color: var(--text-main);
+            background: #fff;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.15);
+        }
+
         input[type="file"] {
             width: 100%;
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            box-sizing: border-box;
+            padding: 10px;
+            border: 1px dashed var(--border-strong);
+            border-radius: 7px;
+            background: var(--surface);
             font-family: inherit;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        input[type="file"]::file-selector-button {
+            margin-right: 10px;
+            padding: 6px 12px;
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--text-main);
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 400;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            accent-color: var(--primary);
         }
 
         button {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 10px 16px;
-            border-radius: 6px;
+            padding: 9px 16px;
+            border-radius: 7px;
             cursor: pointer;
+            font-family: inherit;
+            font-size: 0.875rem;
             font-weight: 500;
             width: 100%;
-            transition: background-color 0.2s;
+            transition: background-color 0.15s;
+            white-space: nowrap;
         }
 
         button:hover {
@@ -105,159 +241,237 @@
             color: var(--text-muted);
         }
 
+        .inline-field {
+            display: flex;
+            gap: 8px;
+        }
+
+        .inline-field button {
+            width: auto;
+        }
+
+        .status-msg {
+            font-size: 0.8rem;
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            display: none;
+        }
+
+        .success {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #166534;
+            display: block;
+        }
+
+        .error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+            display: block;
+        }
+
+        /* --- Chat --- */
+        .collection-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .collection-picker label {
+            margin: 0;
+            white-space: nowrap;
+            color: var(--text-muted);
+        }
+
+        .collection-picker input {
+            width: 220px;
+        }
+
         .chat-history {
             flex: 1;
             overflow-y: auto;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            background: #f1f5f9;
+            padding: 20px 22px;
+            background: var(--surface);
             display: flex;
             flex-direction: column;
             gap: 12px;
         }
 
         .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 8px;
-            line-height: 1.5;
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            line-height: 1.55;
             word-wrap: break-word;
+            white-space: pre-wrap;
         }
 
         .user-message {
             align-self: flex-end;
             background-color: var(--primary);
             color: white;
-            border-bottom-right-radius: 2px;
+            border-bottom-right-radius: 4px;
         }
 
         .bot-message {
             align-self: flex-start;
             background-color: white;
             border: 1px solid var(--border);
-            border-bottom-left-radius: 2px;
+            border-bottom-left-radius: 4px;
         }
 
         .chat-input-area {
             display: flex;
             gap: 10px;
+            padding: 14px 22px;
+            border-top: 1px solid var(--border);
+            background: var(--panel-bg);
         }
 
         .chat-input-area input[type="text"] {
             flex: 1;
+            padding: 11px 14px;
         }
 
         .chat-input-area button {
             width: auto;
+            padding: 0 22px;
         }
 
-        .status-msg {
-            font-size: 0.875rem;
-            margin-top: 8px;
-            padding: 8px;
-            border-radius: 4px;
-            display: none;
-        }
+        /* --- Responsivo --- */
+        @media (max-width: 860px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+            }
 
-        .success {
-            background: #dcfce7;
-            color: #166534;
-            display: block;
-        }
+            .app-main {
+                flex-direction: column;
+                padding: 16px;
+            }
 
-        .error {
-            background: #fee2e2;
-            color: #991b1b;
-            display: block;
-        }
+            .config-panel {
+                flex: none;
+            }
 
-        hr {
-            border: 0;
-            border-top: 1px solid var(--border);
-            margin: 24px 0;
+            .chat-panel {
+                height: 75vh;
+            }
+
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .collection-picker input {
+                width: 100%;
+            }
+
+            .message {
+                max-width: 90%;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Panel 1: Configuration & Upload -->
-    <div class="panel config-panel">
-        <h2>Coleções Qdrant</h2>
-
-        <div class="form-group">
-            <label for="newCollectionName">Criar Coleção</label>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="newCollectionName" placeholder="ex: base_teste">
-                <button onclick="createCollection()" style="width: auto;">Criar</button>
-            </div>
-            <div id="colStatus" class="status-msg"></div>
+    <header class="app-header">
+        <div class="app-logo">Q</div>
+        <div>
+            <h1>Qdrant RAG Chat</h1>
+            <p>Gerencie coleções, ingira documentos e consulte sua base</p>
         </div>
+    </header>
 
-        <hr>
+    <main class="app-main">
 
-        <h2>Ingestão de Arquivo</h2>
-        <form id="uploadForm" onsubmit="uploadDocument(event)">
-            <div class="form-group">
-                <label for="uploadCollection">Coleção de Destino</label>
-                <input type="text" id="uploadCollection" required placeholder="Nome da coleção existente">
-            </div>
+        <!-- Panel 1: Configuration & Upload -->
+        <aside class="panel config-panel">
+            <section class="panel-section">
+                <h2>Coleções Qdrant</h2>
+                <p class="section-desc">Crie uma nova coleção para armazenar os embeddings.</p>
 
-            <div class="form-group">
-                <label for="fileInput">Arquivo (PDF/TXT)</label>
-                <input type="file" id="fileInput" required accept=".pdf,.txt">
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="chunkSize">Chunk Size</label>
-                    <input type="number" id="chunkSize" value="1000" min="100">
+                <div class="form-group">
+                    <label for="newCollectionName">Nome da coleção</label>
+                    <div class="inline-field">
+                        <input type="text" id="newCollectionName" placeholder="ex: base_teste">
+                        <button onclick="createCollection()">Criar</button>
+                    </div>
+                    <div id="colStatus" class="status-msg"></div>
                 </div>
-                <div class="form-group" style="flex: 1;">
-                    <label for="overlap">Overlap</label>
-                    <input type="number" id="overlap" value="100" min="0">
+            </section>
+
+            <section class="panel-section">
+                <h2>Ingestão de Arquivo</h2>
+                <p class="section-desc">Envie um PDF ou TXT para ser dividido em chunks e vetorizado.</p>
+
+                <form id="uploadForm" onsubmit="uploadDocument(event)">
+                    <div class="form-group">
+                        <label for="uploadCollection">Coleção de destino</label>
+                        <input type="text" id="uploadCollection" required placeholder="Nome da coleção existente">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fileInput">Arquivo (PDF/TXT)</label>
+                        <input type="file" id="fileInput" required accept=".pdf,.txt">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="chunkSize">Chunk size</label>
+                            <input type="number" id="chunkSize" value="1000" min="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="overlap">Overlap</label>
+                            <input type="number" id="overlap" value="100" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="splitterType">Splitter</label>
+                        <select id="splitterType">
+                            <option value="recursive">Recursive Character</option>
+                            <option value="character">Character</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="useTiktoken"> Usar Tiktoken
+                        </label>
+                    </div>
+
+                    <button type="submit" id="btnUpload">Processar e Ingerir</button>
+                    <div id="uploadStatus" class="status-msg"></div>
+                </form>
+            </section>
+        </aside>
+
+        <!-- Panel 2: Chat -->
+        <section class="panel chat-panel">
+            <div class="panel-header">
+                <h2>Chat RAG</h2>
+                <div class="collection-picker">
+                    <label for="chatCollection">Coleção</label>
+                    <input type="text" id="chatCollection" value="Fiscap_Edital_v1">
                 </div>
             </div>
 
-            <div class="form-group">
-                <label for="splitterType">Splitter Type</label>
-                <select id="splitterType">
-                    <option value="recursive">Recursive Character</option>
-                    <option value="character">Character</option>
-                </select>
+            <div class="chat-history" id="chatHistory">
+                <div class="message bot-message">Olá! Qual a sua dúvida sobre os documentos da sua base?</div>
             </div>
 
-            <div class="form-group">
-                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
-                    <input type="checkbox" id="useTiktoken" style="width:auto;"> Usar Tiktoken
-                </label>
-            </div>
+            <form class="chat-input-area" onsubmit="sendMessage(event)">
+                <input type="text" id="chatInput" placeholder="Digite sua pergunta..." autocomplete="off" required>
+                <button type="submit" id="btnSend">Enviar</button>
+            </form>
+        </section>
 
-            <button type="submit" id="btnUpload">Processar e Ingerir</button>
-            <div id="uploadStatus" class="status-msg"></div>
-        </form>
-    </div>
-
-    <!-- Panel 2: Chat -->
-    <div class="panel chat-panel">
-        <h2>Chat RAG</h2>
-
-        <div class="form-group" style="display: flex; gap: 10px; align-items: center;">
-            <label for="chatCollection" style="margin: 0; white-space: nowrap;">Consultar Coleção:</label>
-            <input type="text" id="chatCollection" value="Fiscap_Edital_v1" style="width: 200px;">
-        </div>
-
-        <div class="chat-history" id="chatHistory">
-            <div class="message bot-message">Olá! Qual a sua dúvida sobre os documentos da sua base?</div>
-        </div>
-
-        <form class="chat-input-area" onsubmit="sendMessage(event)">
-            <input type="text" id="chatInput" placeholder="Digite sua pergunta..." autocomplete="off" required>
-            <button type="submit" id="btnSend">Enviar</button>
-        </form>
-    </div>
+    </main>
 
     <script>
         const API_BASE = 'http://localhost:8000';
@@ -283,12 +497,12 @@
 
                 if (res.ok) {
                     statusDiv.className = 'status-msg success';
-                    statusDiv.innerHTML = data.message || `Coleção ${name} criada com sucesso.`;
+                    statusDiv.textContent = data.message || `Coleção ${name} criada com sucesso.`;
                     document.getElementById('uploadCollection').value = name;
                     document.getElementById('chatCollection').value = name;
                 } else {
                     statusDiv.className = 'status-msg error';
-                    statusDiv.innerHTML = data.detail || 'Erro ao criar coleção.';
+                    statusDiv.textContent = data.detail || 'Erro ao criar coleção.';
                 }
             } catch (err) {
                 statusDiv.className = 'status-msg error';
@@ -364,8 +578,9 @@
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
 
-            // Formatacao basica de markdown pra quebras de linha
-            msgDiv.innerHTML = text.replace(/\n/g, '<br>');
+            // textContent evita que o conteudo seja interpretado como HTML;
+            // white-space: pre-wrap (no CSS) preserva as quebras de linha
+            msgDiv.textContent = text;
             historyObj.appendChild(msgDiv);
             historyObj.scrollTop = historyObj.scrollHeight;
         }
