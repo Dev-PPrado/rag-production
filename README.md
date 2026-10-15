@@ -1,8 +1,5 @@
 # Agentic RAG com Qdrant e LangGraph
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/pedro-hsprado-dataengineer)
-[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Dev-PPrado)
-[![Portfólio](https://img.shields.io/badge/Portf%C3%B3lio-4B5563?style=for-the-badge&logo=googlechrome&logoColor=white)](https://dev-pprado.github.io/)
 
 API de *Retrieval-Augmented Generation* (RAG) com arquitetura agêntica, construída com [FastAPI](https://fastapi.tiangolo.com/), [LangGraph](https://langchain-ai.github.io/langgraph/), [Qdrant](https://qdrant.tech/documentation/) e [Langfuse](https://langfuse.com/docs). O sistema permite ingerir documentos PDF e TXT em coleções vetoriais e consultá-los por meio de um agente que decide, a cada mensagem, se precisa ou não buscar contexto na base de conhecimento.
 
